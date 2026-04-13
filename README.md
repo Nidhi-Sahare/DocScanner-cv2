@@ -8,6 +8,7 @@ A smart document scanner built using OpenCV and Flask.
 - Image perspective transform
 - Upload image & live capture
 - Clean scanned output
+- OCR text extraction from scanned documents
 
 ## Tech Stack
 - Python
