@@ -16,6 +16,10 @@ A smart document scanner built using OpenCV and Flask.
 - Flask
 - HTML/CSS
 
+## Demo
+
+![Demo](assets/demo.gif)
+
 ## How to Run
 
 ```bash
