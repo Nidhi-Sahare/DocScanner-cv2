@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocScanner</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .top-bar {
+      width: 100%;
+      background: linear-gradient(90deg, #2563eb, #1e3a8a);
+      color: white;
+      padding: 18px 40px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .main {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .scanner-box {
+      width: 100%;
+      max-width: 1100px;
+      background-color: #1e293b;
+      border-radius: 16px;
+      padding: 35px;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.18);
+    }
+
+    .scanner-box h1 {
+      font-size: 32px;
+      color: #60a5fa;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .scanner-box p {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+    }
+
+    .preview-panel,
+    .control-panel {
+      background-color: #0f172a;
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #bfdbfe;
+    }
+
+    .preview-area {
+      height: 460px;
+      border: 2px dashed #3b82f6;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      background-color: #111827;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #previewImage,
+    #videoFeed,
+    #previewCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      display: none;
+      border-radius: 10px;
+    }
+
+    #previewCanvas {
+      cursor: crosshair;
+    }
+
+    #previewText {
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 80%;
+    }
+
+    .status-box {
+      margin-top: 18px;
+      background-color: #172554;
+      border: 1px solid #2563eb;
+      border-radius: 10px;
+      padding: 14px;
+      color: #cbd5e1;
+      font-size: 14px;
+      min-height: 52px;
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-group h3 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #93c5fd;
+    }
+
+    .btn,
+    .filter-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+    }
+
+    .secondary-btn {
+      background-color: transparent;
+      border: 1px solid #3b82f6;
+      color: #60a5fa;
+    }
+
+    .secondary-btn:hover {
+      background-color: #1d4ed8;
+      color: white;
+    }
+
+    .danger-btn {
+      background-color: #334155;
+      color: #e2e8f0;
+    }
+
+    .danger-btn:hover {
+      background-color: #475569;
+    }
+
+    .success-btn {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: white;
+    }
+
+    .success-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35);
+    }
+
+    .filter-select {
+      background-color: #111827;
+      color: #e2e8f0;
+      border: 1px solid #3b82f6;
+      outline: none;
+    }
+
+    .page-counter {
+      background-color: #111827;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .page-counter span {
+      display: block;
+      font-size: 28px;
+      font-weight: bold;
+      color: #60a5fa;
+      margin-top: 4px;
+    }
+
+    .note {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    .ocr-box {
+      margin-top: 10px;
+      background-color: #111827;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 100px;
+      max-height: 180px;
+      overflow-y: auto;
+      color: #cbd5e1;
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-area {
+        height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">DocScanner</header>
+
+  <main class="main">
+    <div class="scanner-box">
+      <h1>Document Scanner</h1>
+      <p>Upload an image or use live capture, review auto-detected borders, adjust manually if needed, then scan, filter, export, and extract text.</p>
+
+      <div class="layout">
+        <div class="preview-panel">
+          <div class="panel-title">Preview</div>
+
+          <div class="preview-area">
+            <div id="previewText">Upload an image or start live capture to begin.</div>
+            <img id="previewImage" alt="Preview">
+            <video id="videoFeed" autoplay playsinline muted></video>
+            <canvas id="previewCanvas"></canvas>
+          </div>
+
+          <div class="status-box" id="statusBox">
+            Status: Waiting for input...
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <div class="panel-title">Controls</div>
+
+          <input type="file" id="fileInput" accept="image/*" hidden>
+
+          <div class="control-group">
+            <h3>Input Source</h3>
+            <button class="btn primary-btn" id="uploadBtn">Upload Image</button>
+            <button class="btn secondary-btn" id="liveCaptureBtn">Live Capture</button>
+            <button class="btn secondary-btn hidden" id="captureFrameBtn">Capture Frame</button>
+          </div>
+
+          <div class="control-group">
+            <h3>Detection & Scan</h3>
+            <button class="btn primary-btn" id="autoDetectBtn">Auto Detect Border</button>
+            <button class="btn secondary-btn" id="manualAdjustBtn">Manual Adjust</button>
+            <button class="btn success-btn" id="scanBtn">Scan Document</button>
+          </div>
+
+          <div class="control-group">
+            <h3>Filters</h3>
+            <select class="filter-select" id="filterSelect">
+              <option value="original">original</option>
+            </select>
+            <button class="btn secondary-btn" id="applyFilterBtn">Apply Filter</button>
+          </div>
+
+          <div class="control-group">
+            <h3>OCR</h3>
+            <button class="btn secondary-btn" id="ocrBtn">Extract Text</button>
+            <div class="ocr-box" id="ocrResult">OCR text will appear here.</div>
+          </div>
+
+          <div class="control-group">
+            <h3>Page Actions</h3>
+            <button class="btn primary-btn" id="addPageBtn">Add Page</button>
+          </div>
+
+          <div class="control-group">
+            <h3>Export</h3>
+            <button class="btn secondary-btn" id="savePdfBtn">Save PDF</button>
+            <button class="btn danger-btn" id="saveImagesBtn">Save All Images</button>
+          </div>
+
+          <div class="page-counter">
+            Total Pages
+            <span id="pageCount">0</span>
+          </div>
+
+          <div class="note">
+            Flow:<br>
+            1. Upload image or use live capture<br>
+            2. Auto detect border<br>
+            3. If needed, drag corners with manual adjust<br>
+            4. Click Scan Document<br>
+            5. Apply filter / OCR<br>
+            6. Add page and export
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const liveCaptureBtn = document.getElementById("liveCaptureBtn");
+    const captureFrameBtn = document.getElementById("captureFrameBtn");
+    const autoDetectBtn = document.getElementById("autoDetectBtn");
+    const manualAdjustBtn = document.getElementById("manualAdjustBtn");
+    const scanBtn = document.getElementById("scanBtn");
+    const filterSelect = document.getElementById("filterSelect");
+    const applyFilterBtn = document.getElementById("applyFilterBtn");
+    const ocrBtn = document.getElementById("ocrBtn");
+    const addPageBtn = document.getElementById("addPageBtn");
+    const savePdfBtn = document.getElementById("savePdfBtn");
+    const saveImagesBtn = document.getElementById("saveImagesBtn");
+
+    const previewText = document.getElementById("previewText");
+    const previewImage = document.getElementById("previewImage");
+    const videoFeed = document.getElementById("videoFeed");
+    const previewCanvas = document.getElementById("previewCanvas");
+    const statusBox = document.getElementById("statusBox");
+    const pageCount = document.getElementById("pageCount");
+    const ocrResult = document.getElementById("ocrResult");
+
+    const ctx = previewCanvas.getContext("2d");
+
+    let stream = null;
+    let currentPoints = [];
+    let draggingPointIndex = -1;
+    let currentStage = "idle";
+    let lastBaseImage = null;
+
+    function setStatus(message) {
+      statusBox.textContent = "Status: " + message;
+    }
+
+    function hideAllPreview() {
+      previewText.style.display = "none";
+      previewImage.style.display = "none";
+      videoFeed.style.display = "none";
+      previewCanvas.style.display = "none";
+    }
+
+    function showPlaceholder(message) {
+      hideAllPreview();
+      previewText.textContent = message;
+      previewText.style.display = "block";
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      captureFrameBtn.classList.add("hidden");
+      videoFeed.srcObject = null;
+    }
+
+    function showCanvasImage(src) {
+      const img = new Image();
+      img.onload = () => {
+        hideAllPreview();
+        previewCanvas.width = img.width;
+        previewCanvas.height = img.height;
+        previewCanvas.style.display = "block";
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        ctx.drawImage(img, 0, 0);
+        lastBaseImage = src;
+      };
+      img.src = src;
+    }
+
+    function drawPolygonAndPoints() {
+      if (!lastBaseImage) return;
+
+      const img = new Image();
+      img.onload = () => {
+        previewCanvas.width = img.width;
+        previewCanvas.height = img.height;
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        if (currentPoints.length === 4) {
+          ctx.beginPath();
+          ctx.moveTo(currentPoints[0][0], currentPoints[0][1]);
+          for (let i = 1; i < 4; i++) {
+            ctx.lineTo(currentPoints[i][0], currentPoints[i][1]);
+          }
+          ctx.closePath();
+          ctx.strokeStyle = "#3b82f6";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          currentPoints.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point[0], point[1], 8, 0, Math.PI * 2);
+            ctx.fillStyle = "#60a5fa";
+            ctx.fill();
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          });
+        }
+      };
+      img.src = lastBaseImage;
+    }
+
+    function getMousePos(event) {
+      const rect = previewCanvas.getBoundingClientRect();
+      const scaleX = previewCanvas.width / rect.width;
+      const scaleY = previewCanvas.height / rect.height;
+
+      return [
+        (event.clientX - rect.left) * scaleX,
+        (event.clientY - rect.top) * scaleY
+      ];
+    }
+
+    async function loadFilters() {
+      try {
+        const response = await fetch("/filters");
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.filters)) return;
+
+        filterSelect.innerHTML = "";
+        data.filters.forEach(filterName => {
+          const option = document.createElement("option");
+          option.value = filterName;
+          option.textContent = filterName;
+          filterSelect.appendChild(option);
+        });
+      } catch (error) {
+        setStatus("Could not load filters.");
+      }
+    }
+
+    async function updatePageCount() {
+      try {
+        const response = await fetch("/page-count");
+        const data = await response.json();
+        if (data.success) {
+          pageCount.textContent = data.total_pages;
+        }
+      } catch (error) {
+        // ignore silently
+      }
+    }
+
+    previewCanvas.addEventListener("mousedown", (event) => {
+      if (currentStage !== "manual" || currentPoints.length !== 4) return;
+
+      const [mx, my] = getMousePos(event);
+
+      currentPoints.forEach((point, index) => {
+        const dx = point[0] - mx;
+        const dy = point[1] - my;
+        if (Math.sqrt(dx * dx + dy * dy) < 15) {
+          draggingPointIndex = index;
+        }
+      });
+    });
+
+    previewCanvas.addEventListener("mousemove", (event) => {
+      if (draggingPointIndex === -1) return;
+
+      const [mx, my] = getMousePos(event);
+      currentPoints[draggingPointIndex] = [mx, my];
+      drawPolygonAndPoints();
+    });
+
+    previewCanvas.addEventListener("mouseup", () => {
+      draggingPointIndex = -1;
+    });
+
+    previewCanvas.addEventListener("mouseleave", () => {
+      draggingPointIndex = -1;
+    });
+
+    uploadBtn.addEventListener("click", () => {
+      stopCamera();
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      stopCamera();
+
+      const localUrl = URL.createObjectURL(file);
+      showCanvasImage(localUrl);
+      ocrResult.textContent = "OCR text will appear here.";
+      currentPoints = [];
+      currentStage = "uploaded";
+      setStatus("Image selected. Click Auto Detect Border.");
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        setStatus(data.message || "Image uploaded successfully");
+      } catch (error) {
+        setStatus("Upload failed.");
+      }
+    });
+
+    liveCaptureBtn.addEventListener("click", async () => {
+      stopCamera();
+      ocrResult.textContent = "OCR text will appear here.";
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        hideAllPreview();
+        videoFeed.srcObject = stream;
+        videoFeed.style.display = "block";
+        captureFrameBtn.classList.remove("hidden");
+        currentStage = "camera";
+        currentPoints = [];
+        setStatus("Camera started. Click Capture Frame.");
+      } catch (error) {
+        setStatus("Camera access denied or unavailable.");
+      }
+    });
+
+    captureFrameBtn.addEventListener("click", async () => {
+      if (!stream) return;
+
+      hideAllPreview();
+      previewCanvas.width = videoFeed.videoWidth;
+      previewCanvas.height = videoFeed.videoHeight;
+      previewCanvas.style.display = "block";
+      ctx.drawImage(videoFeed, 0, 0, previewCanvas.width, previewCanvas.height);
+
+      const tempDataUrl = previewCanvas.toDataURL("image/jpeg");
+      lastBaseImage = tempDataUrl;
+
+      previewCanvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append("image", blob, "capture.jpg");
+
+        try {
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+          currentStage = "uploaded";
+          setStatus(data.message || "Frame captured successfully. Click Auto Detect Border.");
+        } catch (error) {
+          setStatus("Frame upload failed.");
+        }
+      }, "image/jpeg");
+
+      stopCamera();
+    });
+
+    autoDetectBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/auto-detect", {
+          method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          setStatus(data.message || "Auto detection failed");
+          return;
+        }
+
+        const imageSrc = "data:image/jpeg;base64," + data.image;
+        const img = new Image();
+        img.onload = () => {
+          hideAllPreview();
+          previewCanvas.width = img.width;
+          previewCanvas.height = img.height;
+          previewCanvas.style.display = "block";
+          ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+          ctx.drawImage(img, 0, 0);
+          lastBaseImage = imageSrc;
+          currentPoints = data.points || [];
+          currentStage = "detected";
+        };
+        img.src = imageSrc;
+
+        setStatus(data.message || "Border detected.");
+      } catch (error) {
+        setStatus("Auto detect request failed.");
+      }
+    });
+
+    manualAdjustBtn.addEventListener("click", async () => {
+      if (!lastBaseImage) {
+        setStatus("Upload or capture an image first.");
+        return;
+      }
+
+      if (currentPoints.length !== 4) {
+        const baseImage = new Image();
+        baseImage.onload = () => {
+          currentPoints = [
+            [40, 40],
+            [baseImage.width - 40, 40],
+            [baseImage.width - 40, baseImage.height - 40],
+            [40, baseImage.height - 40]
+          ];
+          currentStage = "manual";
+          drawPolygonAndPoints();
+          setStatus("Manual adjust enabled. Drag the four points, then click Scan Document.");
+        };
+        baseImage.src = lastBaseImage;
+      } else {
+        try {
+          const response = await fetch("/manual-adjust", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ points: currentPoints })
+          });
+
+          const data = await response.json();
+
+          if (!data.success) {
+            setStatus(data.message || "Could not enable manual adjust.");
+            return;
+          }
+
+          currentStage = "manual";
+          drawPolygonAndPoints();
+          setStatus("Manual points ready. Drag the corners, then click Scan Document.");
+        } catch (error) {
+          setStatus("Manual adjust request failed.");
+        }
+      }
+    });
+
+    scanBtn.addEventListener("click", async () => {
+      if (currentPoints.length !== 4) {
+        setStatus("Detect border or set manual points before scanning.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/scan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ points: currentPoints })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          setStatus(data.message || "Scan failed.");
+          return;
+        }
+
+        const scannedSrc = "data:image/jpeg;base64," + data.image;
+        showCanvasImage(scannedSrc);
+        currentStage = "scanned";
+        currentPoints = [];
+        ocrResult.textContent = "OCR text will appear here.";
+        setStatus(data.message || "Document scanned successfully.");
+      } catch (error) {
+        setStatus("Scan request failed.");
+      }
+    });
+
+    applyFilterBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/apply-filter", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ filter: filterSelect.value })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          setStatus(data.message || "Filter could not be applied.");
+          return;
+        }
+
+        const filteredSrc = "data:image/jpeg;base64," + data.image;
+        showCanvasImage(filteredSrc);
+        currentStage = "filtered";
+        setStatus(data.message || "Filter applied.");
+      } catch (error) {
+        setStatus("Filter request failed.");
+      }
+    });
+
+    ocrBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/ocr", {
+          method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          setStatus(data.message || "OCR failed.");
+          ocrResult.textContent = data.text || "OCR text will appear here.";
+          return;
+        }
+
+        ocrResult.textContent = data.text || "No text detected.";
+        setStatus(data.message || "OCR completed.");
+      } catch (error) {
+        setStatus("OCR request failed.");
+      }
+    });
+
+    addPageBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/add-page", {
+          method: "POST"
+        });
+
+        const data = await response.json();
+        setStatus(data.message || "Page action complete");
+
+        if (data.success) {
+          pageCount.textContent = data.total_pages;
+        }
+      } catch (error) {
+        setStatus("Could not add page.");
+      }
+    });
+
+    savePdfBtn.addEventListener("click", () => {
+      window.open("/save-pdf", "_blank");
+    });
+
+    saveImagesBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/save-images");
+        const data = await response.json();
+        setStatus(data.message || "Images saved.");
+      } catch (error) {
+        setStatus("Could not save images.");
+      }
+    });
+
+    loadFilters();
+    updatePageCount();
+  </script>
+</body>
+</html>
